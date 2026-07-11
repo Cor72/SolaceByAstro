@@ -5,7 +5,6 @@
 export type {
 	AdConfig,
 	AnalyticsConfig,
-	AnnouncementConfig,
 	BackgroundWallpaperConfig,
 	CommentConfig,
 	CoverImageConfig,
@@ -36,7 +35,6 @@ export type {
 	FontSelectionConfig,
 } from "../types/fontConfig"; // 字体类型定义
 export { analyticsConfig } from "./analyticsConfig"; // 统计分析配置
-export { announcementConfig } from "./announcementConfig"; // 公告配置
 // 样式配置
 export { backgroundWallpaper } from "./backgroundWallpaper"; // 背景壁纸配置
 // 功能配置
