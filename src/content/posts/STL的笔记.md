@@ -1,8 +1,8 @@
 ---
 title: STL的笔记
 published: 2026-07-11
-description: STL的笔记
-ategory: 算法竞赛
+description: STL的部分笔记
+category: 算法竞赛
 draft: false
 ---
 
