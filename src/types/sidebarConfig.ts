@@ -1,12 +1,9 @@
 // 组件配置类型定义
 export type WidgetComponentType =
 	| "profile"
-	| "announcement"
 	| "categories"
-	| "tags"
 	| "sidebarToc"
 	| "advertisement"
-	| "stats"
 	| "calendar"
 	| "music"
 	| "siteInfo";
