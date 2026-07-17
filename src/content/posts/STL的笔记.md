@@ -4,6 +4,7 @@ published: 2026-07-11
 description: STL的部分笔记
 category: 算法竞赛
 draft: false
+image: ./images/ff5ff51aa432b582fbc208dfe64b970e701881595.avif
 ---
 
 STL的笔记

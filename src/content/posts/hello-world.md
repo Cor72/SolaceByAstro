@@ -5,6 +5,7 @@ description: 这是文章的简短描述
 tags: [前端, 开发]
 category: 前端开发
 draft: false
+image: ./images/34472 fe8a2547c139f06b80dc0e6e24ccebfe5896446.png@1052w_!web-dynamic.avif
 ---
 Welcome to [Hexo](https://hexo.io/)! This is your very first post. Check [documentation](https://hexo.io/docs/) for more info. If you get any problems when using Hexo, you can find the answer in [troubleshooting](https://hexo.io/docs/troubleshooting.html) or you can ask me on [GitHub](https://github.com/hexojs/hexo/issues).
 

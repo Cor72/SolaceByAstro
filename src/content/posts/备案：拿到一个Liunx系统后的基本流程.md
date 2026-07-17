@@ -1,6 +1,7 @@
 ---
 title: 备案：拿到一个Liunx系统后的基本流程
 published: 2026-07-11
+image: ./images/121764304_p0.avif
 description: sudo apt install vim sudo vim /usr/share/lightdm/lightdm.conf.d/50-ubuntu.conf
 category: 系统开发
 draft: false

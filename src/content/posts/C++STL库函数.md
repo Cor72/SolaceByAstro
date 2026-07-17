@@ -3,6 +3,7 @@ title: C++ STL库函数
 published: 2026-07-11
 description: C++ STL库函数 注意参数为`char`型数组，如果需要将string类型转换为int类型，可以使用`stoi`函数（参考下文），或者将`string`类型转换为`const char *`类型。
 category: 算法竞赛
+image: ./images/e563a755f4ec9505f0c1ec696cb860733546744111500143.avif
 draft: false
 ---
 
