@@ -94,6 +94,7 @@ const minutes = remarkPluginFrontmatter.minutes;
     hasCover ? "has-cover" : "no-cover",
     pinned ? "pinned" : "",
     "card-base flex flex-col-reverse w-full rounded-(--radius-large) overflow-hidden relative",
+    "h-[205px]", //固定卡片总高度为 248px
     className,
   ]}
   style={style}
@@ -115,10 +116,8 @@ const minutes = remarkPluginFrontmatter.minutes;
     font-['思源宋体',_serif] 
     text-[#1A749C]
     hover:text-(--primary) dark:hover:text-(--primary)
-    active:text-(--title-active) dark:active:text-(--title-active)"
->
+    active:text-(--title-active) dark:active:text-(--title-active)">
       {title}
-
       {
         password && (
           <Icon
@@ -253,8 +252,8 @@ const minutes = remarkPluginFrontmatter.minutes;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    -webkit-line-clamp: var(--descriptionClampLines);
-    line-clamp: var(--descriptionClampLines);
+    -webkit-line-clamp: 3 !important; 
+    line-clamp: 3 !important;
   }
 
   /* === List Mode Mobile Styles === */
