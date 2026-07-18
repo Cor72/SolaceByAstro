@@ -137,7 +137,7 @@ $: if (initialized && (keywordMobile || keywordMobile === "")) {
 </script>
 
 <!-- search bar for desktop view -->
-<div id="search-bar" class="hidden lg:flex transition-all items-center h-11 mr-2 rounded-lg
+<!-- <div id="search-bar" class="hidden lg:flex transition-all items-center h-11 mr-2 rounded-lg
       bg-black/4 hover:bg-black/6 focus-within:bg-black/6
       dark:bg-white/5 dark:hover:bg-white/10 dark:focus-within:bg-white/10
 ">
@@ -148,7 +148,7 @@ $: if (initialized && (keywordMobile || keywordMobile === "")) {
            class="transition-all pl-10 text-sm bg-transparent outline-0
          h-full w-40 active:w-60 focus:w-60 text-black/50 dark:text-white/50"
     >
-</div>
+</div> -->
 
 <!-- toggle btn for phone/tablet view -->
 <button on:click={togglePanel} aria-label="Search Panel" id="search-switch"
