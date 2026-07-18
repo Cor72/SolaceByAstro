@@ -1,0 +1,52 @@
+---
+export interface Props {
+	published: Date;
+	updated?: Date;
+	category?: string;
+	tags?: string[];
+	hideUpdateDate?: boolean;
+	hideTagsForMobile?: boolean;
+	isHome?: boolean;
+	className?: string;
+	id?: string;
+	showPublished?: boolean;
+	showCategory?: boolean;
+	showTags?: boolean;
+	maxTags?: number;
+	showNoTags?: boolean;
+	customPath?: string;
+	pinned?: boolean;
+	password?: boolean;
+	words?: number;
+	minutes?: number;
+	showWords?: boolean;
+	showReadingTime?: boolean;
+}
+
+const {
+	published,
+	updated,
+	category,
+	tags,
+	hideUpdateDate,
+	hideTagsForMobile,
+	isHome,
+	className = "",
+	id,
+	showPublished = true,
+	showCategory = true,
+	showTags = true,
+	maxTags,
+	showNoTags = true,
+	customPath,
+	pinned,
+	words,
+	minutes,
+	showWords = false,
+	showReadingTime = false,
+} = Astro.props;
+
+const path = customPath || (id ? `/posts/${id}` : "");
+const visibleTags =
+	typeof maxTags === "number" ? tags?.slice(0, maxTags) : tags;
+---
