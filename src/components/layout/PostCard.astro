@@ -83,7 +83,7 @@ const descriptionClampLines = String(descriptionLines);
 const shouldClampDescription = descriptionLines > 0;
 
 const { remarkPluginFrontmatter } = await render(entry);
-const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
+const descriptionText = remarkPluginFrontmatter.excerpt || description || "";
 const words = remarkPluginFrontmatter.words;
 const minutes = remarkPluginFrontmatter.minutes;
 ---
