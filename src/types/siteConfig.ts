@@ -190,4 +190,36 @@ export type SiteConfig = {
 		 */
 		noReferrerDomains?: string[];
 	};
+
+	// 鼠标点击烟花效果
+	firework?: {
+		// 是否启用
+		enable: boolean;
+		// 排除的元素选择器（点击这些元素不触发烟花）
+		excludeElements?: string[];
+		// 粒子配置
+		particles?: {
+			// 形状："circle" | "rect"
+			shape?: "circle" | "rect";
+			// 运动方式：["emit"] | ["diffuse"] | ["emit", "diffuse"]
+			move?: string[];
+			// 缓动函数
+			easing?: string;
+			// 颜色列表
+			colors?: string[];
+			// 粒子数量
+			number?: number;
+			// 持续时间范围 [min, max] (ms)
+			duration?: [number, number] | number;
+			// 形状选项
+			shapeOptions?: {
+				// 半径范围 [min, max] 或固定值
+				radius?: [number, number] | number;
+				// 透明度范围
+				alpha?: [number, number] | number;
+				// 线宽（用于圆环效果）
+				lineWidth?: number;
+			};
+		}[];
+	};
 };

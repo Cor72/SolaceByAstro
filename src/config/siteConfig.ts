@@ -249,4 +249,40 @@ export const siteConfig: SiteConfig = {
 
 	// 站点语言，在本配置文件顶部SITE_LANG定义
 	lang: SITE_LANG,
+
+	// 鼠标点击烟花效果
+	firework: {
+		// 是否启用
+		enable: true,
+		// 排除的元素选择器（点击这些元素不触发烟花）
+		excludeElements: ["a", "button", "#swup-container"],
+		// 粒子配置
+		particles: [
+			{
+				shape: "circle",
+				move: ["emit"],
+				easing: "easeOutExpo",
+				colors: ["#ff5252", "#ff7c7c", "#ffafaf", "#ffd0d0"],
+				number: 20,
+				duration: [1200, 1800],
+				shapeOptions: {
+					radius: [16, 32],
+					alpha: [0.3, 0.5],
+				},
+			},
+			{
+				shape: "circle",
+				move: ["diffuse"],
+				easing: "easeOutExpo",
+				colors: ["#ff0000"],
+				number: 1,
+				duration: [1200, 1800],
+				shapeOptions: {
+					radius: 20,
+					alpha: [0.2, 0.5],
+					lineWidth: 6,
+				},
+			},
+		],
+	},
 };
