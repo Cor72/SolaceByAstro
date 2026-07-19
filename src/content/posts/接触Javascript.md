@@ -1,5 +1,5 @@
 ---
-title: 接触java
+title: 接触javascript
 published: 2026-07-19
 category: 前端开发
 draft: false
