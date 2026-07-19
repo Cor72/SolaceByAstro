@@ -24,8 +24,8 @@
         expressions: ["smile", "squint", "tears", "teardrop"],
         
         // 期望在屏幕上显示的绝对大小 (CSS 像素)
-        targetWidth: 600,  
-        targetHeight: 800, 
+        targetWidth: 540,  
+        targetHeight: 720, 
 
         // 距离屏幕边缘的距离 (CSS 像素)
         bottom: 480,
@@ -122,7 +122,7 @@
         hitbox.addEventListener("pointerup", (e) => {
             hitbox.releasePointerCapture(e.pointerId);
             hitbox.style.cursor = "grab";
-            if (!isDragging && model) triggerRandomExpression(model);
+            if (model) triggerRandomExpression(model);
             startMouseX = 0;
             startMouseY = 0;
             isDragging = false;
@@ -194,14 +194,12 @@
             canvas.style.display = "";
             hitbox.style.display = "";
             if (span) span.textContent = "隐藏";
-            await initApp();
             await loadModel();
         } else {
             canvas.style.display = "none";
             hitbox.style.display = "none";
             if (span) span.textContent = "显示";
             if (model) { app.stage.removeChild(model); model.destroy(); model = null; }
-            if (app) { app.destroy(true, { children: true }); app = null; }
         }
     }
 
