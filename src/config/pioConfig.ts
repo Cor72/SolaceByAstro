@@ -11,7 +11,7 @@ export const live2dWidgetConfig: Live2DWidgetConfig = {
 	// 显示位置：bottom-left 或 bottom-right
 	position: "bottom-right" as const,
 	// 画布尺寸（px）
-	size: { width: 600, height: 800 },
+	size: { width: 300, height: 400 },
 	// 点击触发表情后恢复默认的延迟（ms）
 	expressionResetDelay: 2000,
 	// 响应式配置

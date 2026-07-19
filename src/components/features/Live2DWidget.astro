@@ -1,300 +1,246 @@
----
-import type { Live2DWidgetConfig } from "../../types/pioConfig";
-
-interface Props {
-    config: Live2DWidgetConfig;
-}
-
-const { config } = Astro.props;
-
-const isRight = config.position === "bottom-right";
-const size = config.size || { width: 600, height: 800 };
-const expressions = config.expressions || [];
-const resetDelay = config.expressionResetDelay || 2000;
-const responsive = config.responsive || {};
----
-
-<!-- 将 size 也通过 data 属性传递下去 -->
-<div
-    id="live2d-container"
-    class:list={["live2d-container", isRight ? "right" : "left"]}
-    data-model-path={config.modelPath}
-    data-size={JSON.stringify(size)}
-    data-expressions={JSON.stringify(expressions)}
-    data-reset-delay={resetDelay.toString()}
-    data-responsive={JSON.stringify(responsive)}
-></div>
-
 <canvas id="live2d-canvas"></canvas>
 <div id="live2d-hitbox"></div>
-
-<div
-    id="live2d-toggle"
-    class:list={["live2d-toggle", isRight ? "right" : "left"]}
->
-    <span>显示</span>
+<div id="live2d-toggle" class="live2d-toggle right">
+    <span>隐藏</span>
 </div>
 
+<!-- Cubism 4 运行时核心 -->
 <script is:inline src="/HeiJiao/static/live2dcubismcore.min.js"></script>
 
 <script>
+    // @ts-nocheck
     import * as PIXI from "pixi.js";
     import { Live2DModel } from "pixi-live2d-display/cubism4";
 
-    // @ts-ignore - 修复 window 上不存在 PIXI 的报错
+    // 挂载到 window 供 pixi-live2d-display 内部使用
     window.PIXI = PIXI;
 
-    const container = document.getElementById("live2d-container");
-    const canvas = document.getElementById("live2d-canvas") as HTMLCanvasElement;
-    const toggleBtn = document.getElementById("live2d-toggle");
-    const hitbox = document.getElementById("live2d-hitbox") as HTMLDivElement;
-    const isRightPos = container?.classList.contains("right");
-
-    // 从 data 属性中安全解析参数
-    const modelPath = container?.dataset.modelPath || "";
-    const size = JSON.parse(container?.dataset.size || '{"width":600,"height":800"}');
-    const expressions: string[] = JSON.parse(container?.dataset.expressions || "[]");
-    const resetDelay = parseInt(container?.dataset.resetDelay || "2000");
-    const responsive = JSON.parse(container?.dataset.responsive || "{}");
-
-    if (canvas && toggleBtn && hitbox) {
-        let app: any = null;
-        let model: any = null;
-        let visible = true;
-        let expressionTimer: ReturnType<typeof setTimeout> | null = null;
-
-        const getScaleRatio = () => {
-            if (!app) return 1;
-            return app.screen.width / window.innerWidth;
-        };
-
-        function checkResponsive() {
-            if (responsive.hideOnMobile) {
-                const breakpoint = responsive.mobileBreakpoint || 768;
-                if (window.innerWidth <= breakpoint) {
-                    canvas.style.display = "none";
-                    hitbox.style.display = "none";
-                    toggleBtn!.style.display = "none";
-                    return true;
-                }
-            }
-            canvas.style.display = "";
-            hitbox.style.display = "";
-            toggleBtn!.style.display = "";
-            return false;
-        }
-
-        function updateHitbox() {
-            if (!model || !app) return;
-            const bounds = model.getBounds(false);
-            const ratio = window.innerWidth / app.screen.width;
-
-            hitbox.style.width = `${bounds.width * ratio}px`;
-            hitbox.style.height = `${bounds.height * ratio}px`;
-            hitbox.style.left = `${bounds.x * ratio}px`;
-            hitbox.style.top = `${bounds.y * ratio}px`;
-        }
-
-        function bindDragInteraction() {
-            let isDragging = false;
-            let startMouseX = 0;
-            let startMouseY = 0;
-            let startModelX = 0;
-            let startModelY = 0;
-
-            hitbox.addEventListener("pointerdown", (e: PointerEvent) => {
-                if (!model) return;
-                isDragging = false;
-                startMouseX = e.clientX;
-                startMouseY = e.clientY;
-                startModelX = model.x;
-                startModelY = model.y;
-                
-                hitbox.setPointerCapture(e.pointerId);
-                hitbox.style.cursor = "grabbing";
-            });
-
-            hitbox.addEventListener("pointermove", (e: PointerEvent) => {
-                if (!model || (startMouseX === 0 && startMouseY === 0)) return;
-
-                const dx = e.clientX - startMouseX;
-                const dy = e.clientY - startMouseY;
-
-                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-                    isDragging = true;
-                }
-
-                if (isDragging) {
-                    const ratio = getScaleRatio();
-                    let newX = startModelX + dx * ratio;
-                    let newY = startModelY + dy * ratio;
-
-                    const bounds = model.getBounds(false);
-                    const screenW = app.screen.width;
-                    const screenH = app.screen.height;
-                    
-                    newX = Math.max(-bounds.width * 0.8, Math.min(screenW - bounds.width * 0.2, newX));
-                    newY = Math.max(-bounds.height * 0.8, Math.min(screenH - bounds.height * 0.2, newY));
-
-                    model.x = newX;
-                    model.y = newY;
-                    updateHitbox();
-                }
-            });
-
-            hitbox.addEventListener("pointerup", (e: PointerEvent) => {
-                hitbox.releasePointerCapture(e.pointerId);
-                hitbox.style.cursor = "grab";
-                
-                if (!isDragging && model) {
-                    triggerRandomExpression(model);
-                }
-                startMouseX = 0;
-                startMouseY = 0;
-                isDragging = false;
-            });
-        }
-
-        function bindFocusInteraction() {
-            document.addEventListener("mousemove", (e: MouseEvent) => {
-                if (!model || !app) return;
-                const ratio = getScaleRatio();
-                const x = e.clientX * ratio;
-                const y = e.clientY * ratio;
-                model.focus(x, y);
-            });
-        }
-
-        function triggerRandomExpression(m: any) {
-            if (expressionTimer) clearTimeout(expressionTimer);
-            if (expressions.length === 0) return;
-
-            const name = expressions[Math.floor(Math.random() * expressions.length)];
-            m.expression(name);
-
-            expressionTimer = setTimeout(() => {
-                m.expression();
-            }, resetDelay);
-        }
-
-        async function loadModel() {
-            if (!canvas) return;
-
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-
-            if (model) {
-                app.stage.removeChild(model);
-                model.destroy();
-                model = null;
-            }
-
-            try {
-                model = await Live2DModel.from(modelPath);
-
-                const scale = Math.min(width / size.width, height / size.height) * 0.8;
-                model.scale.set(scale);
-
-                if (isRightPos) {
-                    model.x = width - model.width * scale;
-                } else {
-                    model.x = 0;
-                }
-                model.y = height - model.height * scale;
-
-                app.stage.addChild(model);
-                
-                updateHitbox();
-                bindDragInteraction();
-                bindFocusInteraction();
-            } catch (error) {
-                console.error("Live2D 模型加载失败:", error);
-            }
-        }
-
-        async function toggle() {
-            visible = !visible;
-            // 修复 toggleBtn 可能为 null 的报错，使用可选链
-            const span = toggleBtn?.querySelector("span");
-            
-            if (visible) {
-                canvas.style.display = "";
-                hitbox.style.display = "";
-                if (span) span.textContent = "隐藏";
-                await initApp();
-                await loadModel();
-            } else {
-                canvas.style.display = "none";
-                hitbox.style.display = "none";
-                if (span) span.textContent = "显示";
-                if (model) {
-                    app.stage.removeChild(model);
-                    model.destroy();
-                    model = null;
-                }
-                if (app) {
-                    app.destroy(true, { children: true });
-                    app = null;
-                }
-            }
-        }
-
-        async function initApp() {
-            if (app) return;
-            
-            app = new PIXI.Application({
-                view: canvas,
-                width: window.innerWidth,
-                height: window.innerHeight,
-                autoStart: true,
-                backgroundAlpha: 0,
-                antialias: true,
-                resolution: window.devicePixelRatio || 1,
-            });
-        }
-
-        async function init() {
-            if (checkResponsive()) return;
-            await initApp();
-            await loadModel();
-        }
-
-        toggleBtn.addEventListener("click", toggle);
+    // ==========================================
+    // 1. 配置区域（直接在这里修改）
+    // ==========================================
+    const CONFIG = {
+        enable: true,
+        modelPath: "/HeiJiao/yachiyo.model3.json",
+        expressions: ["smile", "squint", "tears", "teardrop"],
         
-        window.addEventListener("resize", () => {
-            if (checkResponsive()) return;
-            if (app) {
-                app.renderer.resize(window.innerWidth, window.innerHeight);
-            }
-            if (model) updateHitbox();
+        // 期望在屏幕上显示的绝对大小 (CSS 像素)
+        targetWidth: 600,  
+        targetHeight: 800, 
+
+        // 距离屏幕边缘的距离 (CSS 像素)
+        bottom: 480,
+        right: 600,
+
+        expressionResetDelay: 2000,
+        responsive: {
+            hideOnMobile: false,
+            mobileBreakpoint: 768,
+        },
+    };
+
+    // ==========================================
+    // 2. 核心逻辑
+    // ==========================================
+    const canvas = document.getElementById("live2d-canvas");
+    const hitbox = document.getElementById("live2d-hitbox");
+    const toggleBtn = document.getElementById("live2d-toggle");
+
+    let app = null;
+    let model = null;
+    let visible = true;
+    let expressionTimer = null;
+
+    // 获取设备像素比 (用于坐标转换)
+    const getDPR = () => app ? app.screen.width / window.innerWidth : window.devicePixelRatio || 1;
+
+    function checkResponsive() {
+        if (CONFIG.responsive.hideOnMobile && window.innerWidth <= CONFIG.responsive.mobileBreakpoint) {
+            canvas.style.display = "none";
+            hitbox.style.display = "none";
+            toggleBtn.style.display = "none";
+            return true;
+        }
+        canvas.style.display = "";
+        hitbox.style.display = "";
+        toggleBtn.style.display = "";
+        return false;
+    }
+
+    // 同步追踪层的位置和大小
+    function updateHitbox() {
+        if (!model || !app) return;
+        const bounds = model.getBounds(false);
+        const dpr = getDPR();
+
+        // 将 PIXI 内部坐标转换为屏幕 CSS 像素
+        hitbox.style.width = `${bounds.width / dpr}px`;
+        hitbox.style.height = `${bounds.height / dpr}px`;
+        hitbox.style.left = `${bounds.x / dpr}px`;
+        hitbox.style.top = `${bounds.y / dpr}px`;
+    }
+
+    // 绑定拖拽
+    function bindDragInteraction() {
+        let isDragging = false;
+        let startMouseX = 0, startMouseY = 0;
+        let startModelX = 0, startModelY = 0;
+
+        hitbox.addEventListener("pointerdown", (e) => {
+            if (!model) return;
+            isDragging = false;
+            startMouseX = e.clientX;
+            startMouseY = e.clientY;
+            startModelX = model.x;
+            startModelY = model.y;
+            hitbox.setPointerCapture(e.pointerId);
+            hitbox.style.cursor = "grabbing";
         });
 
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", init);
-        } else {
-            init();
+        hitbox.addEventListener("pointermove", (e) => {
+            if (!model || (startMouseX === 0 && startMouseY === 0)) return;
+            const dx = e.clientX - startMouseX;
+            const dy = e.clientY - startMouseY;
+
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging = true;
+
+            if (isDragging) {
+                const dpr = getDPR();
+                let newX = startModelX + dx * dpr;
+                let newY = startModelY + dy * dpr;
+
+                // 边界防丢限制
+                const bounds = model.getBounds(false);
+                newX = Math.max(-bounds.width * 0.8, Math.min(app.screen.width - bounds.width * 0.2, newX));
+                newY = Math.max(-bounds.height * 0.8, Math.min(app.screen.height - bounds.height * 0.2, newY));
+
+                model.x = newX;
+                model.y = newY;
+                updateHitbox();
+            }
+        });
+
+        hitbox.addEventListener("pointerup", (e) => {
+            hitbox.releasePointerCapture(e.pointerId);
+            hitbox.style.cursor = "grab";
+            if (!isDragging && model) triggerRandomExpression(model);
+            startMouseX = 0;
+            startMouseY = 0;
+            isDragging = false;
+        });
+    }
+
+    // 眼神追踪
+    function bindFocusInteraction() {
+        document.addEventListener("mousemove", (e) => {
+            if (!model || !app) return;
+            const dpr = getDPR();
+            model.focus(e.clientX * dpr, e.clientY * dpr);
+        });
+    }
+
+    function triggerRandomExpression(m) {
+        if (expressionTimer) clearTimeout(expressionTimer);
+        if (CONFIG.expressions.length === 0) return;
+        const name = CONFIG.expressions[Math.floor(Math.random() * CONFIG.expressions.length)];
+        m.expression(name);
+        expressionTimer = setTimeout(() => m.expression(), CONFIG.expressionResetDelay);
+    }
+
+    async function loadModel() {
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+
+        if (model) {
+            app.stage.removeChild(model);
+            model.destroy();
+            model = null;
         }
+
+        try {
+            model = await Live2DModel.from(CONFIG.modelPath);
+
+            // 【关键修正】强制按照配置的 targetWidth 和 targetHeight 进行缩放
+            // 因为 PIXI 开启了 resolution: dpr，所以内部坐标需要乘以 dpr 才能对应真实的 CSS 像素
+            const scaleWidth = (CONFIG.targetWidth * dpr) / model.width;
+            const scaleHeight = (CONFIG.targetHeight * dpr) / model.height;
+            const scale = Math.min(scaleWidth, scaleHeight);
+            
+            model.scale.set(scale);
+
+            // 计算初始绝对位置 (转换为 PIXI 内部物理像素坐标)
+            const actualW = model.width * scale;
+            const actualH = model.height * scale;
+            const screenPixiW = screenW * dpr;
+            const screenPixiH = screenH * dpr;
+
+            // 位置：右下角，距底部20px，距右侧20px
+            model.x = screenPixiW - actualW - (CONFIG.right * dpr);
+            model.y = screenPixiH - actualH - (CONFIG.bottom * dpr);
+
+            app.stage.addChild(model);
+            updateHitbox();
+            bindDragInteraction();
+            bindFocusInteraction();
+        } catch (error) {
+            console.error("Live2D 模型加载失败:", error);
+        }
+    }
+
+    async function toggle() {
+        visible = !visible;
+        const span = toggleBtn.querySelector("span");
+        if (visible) {
+            canvas.style.display = "";
+            hitbox.style.display = "";
+            if (span) span.textContent = "隐藏";
+            await initApp();
+            await loadModel();
+        } else {
+            canvas.style.display = "none";
+            hitbox.style.display = "none";
+            if (span) span.textContent = "显示";
+            if (model) { app.stage.removeChild(model); model.destroy(); model = null; }
+            if (app) { app.destroy(true, { children: true }); app = null; }
+        }
+    }
+
+    async function initApp() {
+        if (app) return;
+        app = new PIXI.Application({
+            view: canvas,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            autoStart: true,
+            backgroundAlpha: 0,
+            antialias: true,
+            resolution: window.devicePixelRatio || 1,
+        });
+    }
+
+    async function init() {
+        if (!CONFIG.enable || checkResponsive()) return;
+        await initApp();
+        await loadModel();
+    }
+
+    toggleBtn.addEventListener("click", toggle);
+
+    window.addEventListener("resize", () => {
+        if (checkResponsive()) return;
+        if (app) app.renderer.resize(window.innerWidth, window.innerHeight);
+        if (model) updateHitbox();
+    });
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
     }
 </script>
 
 <style>
-    .live2d-container {
-        position: fixed;
-        bottom: 0px;
-        width: 0;
-        height: 0;
-        z-index: -1;
-        pointer-events: none;
-    }
-
-    .live2d-container.right {
-        right: 0px;
-    }
-
-    .live2d-container.left {
-        left: 120px;
-    }
-
+    /* Canvas 全屏铺底，纯渲染层，不拦截事件 */
     #live2d-canvas {
         position: fixed;
         top: 0;
@@ -305,6 +251,7 @@ const responsive = config.responsive || {};
         z-index: 2008;
     }
 
+    /* 动态追踪层，贴在模型身上，拦截交互 */
     #live2d-hitbox {
         position: fixed;
         top: 0;
@@ -314,6 +261,7 @@ const responsive = config.responsive || {};
         z-index: 2009;
     }
 
+    /* 切换按钮 */
     .live2d-toggle {
         position: fixed;
         bottom: 25px;
@@ -327,6 +275,7 @@ const responsive = config.responsive || {};
         font-size: 0.85rem;
         color: #ff6b9d;
         transition: all 0.3s;
+        user-select: none;
     }
 
     .live2d-toggle.right {
@@ -347,13 +296,7 @@ const responsive = config.responsive || {};
             padding: 4px 10px;
             font-size: 0.8rem;
         }
-
-        .live2d-toggle.right {
-            right: 20px;
-        }
-
-        .live2d-toggle.left {
-            left: 20px;
-        }
+        .live2d-toggle.right { right: 20px; }
+        .live2d-toggle.left { left: 20px; }
     }
 </style>
